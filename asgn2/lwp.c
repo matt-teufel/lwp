@@ -11,7 +11,7 @@
 int id_count = 1;
 
 tid_t lwp_create(lwpfun function,void * argument){
-    context * new_thread;
+    thread new_thread;
     unsigned long *s;
     long r, page_size;
     //default stack size 8 MB
@@ -20,7 +20,7 @@ tid_t lwp_create(lwpfun function,void * argument){
     struct rlimit limit_struct;
     r = getrlimit(RLIMIT_STACK, &limit_struct);
     //setting stack to stack resource limit 
-    if(limit_struct.rlim_cur && limit_struct.rlim_cur != RLIM_INFINITY){
+    if(limit_struct.rlim_cur > 0 && limit_struct.rlim_cur != RLIM_INFINITY){
         if(limit_struct.rlim_cur % page_size == 0){
             howbig = limit_struct.rlim_cur;
         }
@@ -30,14 +30,14 @@ tid_t lwp_create(lwpfun function,void * argument){
         }
         
     }
-    new_thread->stacksize = howbig;
-
     //create stack 
     s = mmap(NULL,howbig,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
+    new_thread = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
     if(s == MAP_FAILED){
         printf("unable to map region\n");
         return NO_THREAD;
     }
+    new_thread->stacksize = howbig;
     new_thread->stack=(s + (howbig/sizeof(unsigned long)));
     // if(s % 16 != 0){
     //     printf("stack is not alligned on 16 byte boundary\n");
@@ -48,7 +48,7 @@ tid_t lwp_create(lwpfun function,void * argument){
         initialize stack and registers as if 
         function called swap_rfiles() itself 
     */
-    *(new_thread->stack) = (unsigned long)function; /* put function on stack to mimic return address */
+    *(new_thread->stack) = (unsigned long)function; /* put function address on stack to mimic return address */
 
     new_thread->state.rbp = (unsigned long)(new_thread->stack);           /* base of stack address */
     new_thread->state.rsp = (unsigned long)(new_thread->stack - 1);     /* top of stack address */
