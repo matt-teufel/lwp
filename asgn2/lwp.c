@@ -39,20 +39,19 @@ tid_t lwp_create(lwpfun function,void * argument){
     }
     new_thread->stacksize = howbig;
     new_thread->stack=(s + (howbig/sizeof(unsigned long)));
-    // if(s % 16 != 0){
-    //     printf("stack is not alligned on 16 byte boundary\n");
-    // }
+    if((unsigned long)s % 16 != 0){
+        printf("stack is not alligned on 16 byte boundary\n");
+    }
     new_thread->tid = id_count++;
 
     /*  
         initialize stack and registers as if 
         function called swap_rfiles() itself 
     */
-    *(new_thread->stack) = (unsigned long)function; /* put function address on stack to mimic return address */
-
-    new_thread->state.rbp = (unsigned long)(new_thread->stack);           /* base of stack address */
-    new_thread->state.rsp = (unsigned long)(new_thread->stack - 1);     /* top of stack address */
-    new_thread->state.rdi = (unsigned long)argument;                      /* argument -- should this be passed as address? */
+    *(s-1) = (unsigned long)function; /* put function address on stack to mimic return address */
+    *(s-2) = (unsigned long)s;          /* put rbp on stack */
+    new_thread->state.rsp = (unsigned long)(s - 2);     /* top of stack address */
+    new_thread->state.rdi = (unsigned long)argument;/* argument */
 
     new_thread->state.fxsave=FPU_INIT; /*floating point state */
 }
