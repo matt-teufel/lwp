@@ -8,6 +8,8 @@
  *
  * #define STAILQ_NEXT(t)			((t)->fieldname)
  */
+//  #define STAILQ_NEXT(t)			((t)->exited)
+// #define STAILQ_NEXT(t)			((t)->fieldname)
 #if !defined(STAILQ_NEXT)
 #error "must have an STAILQ_NEXT defined"
 #endif

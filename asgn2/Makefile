@@ -32,11 +32,11 @@ lwp: liblwp.so
 # 	ranlib lwp.a
 
 #builds one library with scheduler.o, under lwp.so
-liblwp.so: lwp.o rr_scheduler.o magic64.o
-	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o magic64.o
+liblwp.so: lwp.o rr_scheduler.o magic64.o	waitq.o
+	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o magic64.o	waitq.o
 
-lwp.o: lwp.c lwp.h rr_scheduler.h magic64.o
-	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c magic64.o
+lwp.o: lwp.c lwp.h rr_scheduler.h magic64.o waitq.o
+	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c magic64.o waitq.o
 
 
 #rr_scheduler setup
@@ -45,6 +45,12 @@ rr_scheduler: rr_scheduler.a rr_scheduler.so
 
 rr_scheduler.o: rr_scheduler.c lwp.h rr_scheduler.h
 	$(CC) $(CFLAGS) -fPIC -I./include -o rr_scheduler.o -c rr_scheduler.c
+
+waitq:	waitq.a	waitq.so
+.PHONY:	waitq
+
+waitq.o:	waitq.c	lwp.h	waitq.h	stailq.h
+	$(CC)	$(CFLAGS)	-fPIC	-I./include	-o	waitq.o	-c	waitq.c
 
 
 
@@ -79,33 +85,6 @@ rr_scheduler.o: rr_scheduler.c lwp.h rr_scheduler.h
 
 # util.o: util.c ../include/lwp.h ../include/util.h ../include/snakes.h
 # 	$(CC) $(CFLAGS) -c util.c
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 clean :
