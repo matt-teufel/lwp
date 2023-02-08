@@ -1,0 +1,4 @@
+running lwp_se.c
+1. run make
+2. gcc -g lwp_se.c -L. -llwp
+3. LD_LIBRARY_PATH=. ./a.out

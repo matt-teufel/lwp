@@ -23,7 +23,7 @@ magic64.o: magic64.S
 
 #lwp setup
 #run 'make lwp' to create lwp library
-lwp: lwp.so
+lwp: liblwp.so
 .PHONY: lwp #need this line to ignore main()/ executable
 
 #builds lwp into a library
@@ -32,11 +32,11 @@ lwp: lwp.so
 # 	ranlib lwp.a
 
 #builds one library with scheduler.o, under lwp.so
-lwp.so: lwp.o rr_scheduler.o
-	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o
+liblwp.so: lwp.o rr_scheduler.o magic64.o
+	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o magic64.o
 
 lwp.o: lwp.c lwp.h rr_scheduler.h magic64.o
-	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c
+	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c magic64.o
 
 
 #rr_scheduler setup
