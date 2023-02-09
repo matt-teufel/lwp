@@ -32,11 +32,11 @@ lwp: liblwp.so
 # 	ranlib lwp.a
 
 #builds one library with scheduler.o, under lwp.so
-liblwp.so: lwp.o rr_scheduler.o magic64.o	waitq.o
-	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o magic64.o	waitq.o
+liblwp.so: lwp.o rr_scheduler.o magic64.o	waitq.o	exitq.o
+	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o magic64.o	waitq.o	exitq.o
 
-lwp.o: lwp.c lwp.h rr_scheduler.h magic64.o waitq.o
-	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c magic64.o waitq.o
+lwp.o: lwp.c lwp.h rr_scheduler.h magic64.o waitq.o	exitq.o
+	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c magic64.o waitq.o	exitq.o
 
 
 #rr_scheduler setup
@@ -52,7 +52,13 @@ waitq:	waitq.a	waitq.so
 waitq.o:	waitq.c	lwp.h	waitq.h	stailq.h
 	$(CC)	$(CFLAGS)	-fPIC	-I./include	-o	waitq.o	-c	waitq.c
 
+exitq.o:	exitq.c	lwp.h	exitq.h	stailq.h
+	$(CC)	$(CFLAGS)	-fPIC	-I./include	-o	exitq.o	-c	exitq.c
 
+allq.o:	allq.c	lwp.h	allq.h	
+	$(CC)	$(CFLAGS)	-fPIC	-I./include	-o	allq.o	-c	allq.c
+# nums:	numbersmain.o	util.o	./liblwp.so
+# 	$(LD)	$(LDFLAGS)	-o	nums	numbersmain.o	-llwp
 
 #insert test files here
 # snakes: randomsnakes.o util.o ../lib64/libPLN.so ../lib64/libsnakes.so
@@ -83,8 +89,8 @@ waitq.o:	waitq.c	lwp.h	waitq.h	stailq.h
 # numbermain.o: numbersmain.c lwp.h
 # 	$(CC) $(CFLAGS) -c numbersmain.c
 
-# util.o: util.c ../include/lwp.h ../include/util.h ../include/snakes.h
-# 	$(CC) $(CFLAGS) -c util.c
+util.o: util.c lwp.h util.h snakes.h
+	$(CC) $(CFLAGS) -c util.c
 
 
 clean :

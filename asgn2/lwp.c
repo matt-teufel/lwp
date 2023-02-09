@@ -6,9 +6,8 @@
 #include <sys/types.h>
 #include "fp.h"
 #include "waitq.h"
-// #define STAILQ_NEXT(t)			((t)->exited)
-
-//c file for wait q and c file for zombie q 
+#include "exitq.h"
+#include "allq.h"
 #include "lwp.h"
 #include "rr_scheduler.h"
 #define EXIT_MASK 0xFF
@@ -20,19 +19,7 @@ rfile *thread_context;
 int id_count = 1;
 int wait_count = 0;
 int exit_count = 0;
-// struct tq waitq, exitq;
-// STAILQ_HEAD(tq);
-// TAILQ_INITIALIZER(waitq);
-// TAILQ_INITIALIZER(exitq);
 int howbig = 8000000;
-
-
-/*issues
-makefile debugging(export LD_LIBRARY_PATH)
-also running library functions in a seperate file
-doing additional testing
-
-*/
 
 void rr_admit(thread new);
 void rr_remove(thread victim);
@@ -73,27 +60,35 @@ void print_registers(thread t){
 global linked list that holds the exited threads
 global linked list that holds the waiting threads
 */
-thread tid2thread(tid_t tid){
-    /*
-    returns the thread corresponding to the given thread ID, or NULL if
-    ID is invalid
-    */
-   if(current_lwp == NULL){
-        return NULL;
-   }
-   else{
-    thread temp = current_lwp;
-    while(temp -> tid != tid){
-        temp -> lib_one;
-    }
+// thread tid2thread(tid_t tid){
+//     /*
+//     returns the thread corresponding to the given thread ID, or NULL if
+//     ID is invalid
+//     */
+//    if(current_lwp == NULL){
+//         return NULL;
+//    }
+//    else{
+//     thread temp = current_lwp;
+//     while(temp -> tid != tid){
+//         temp -> lib_one;
+//     }
 
-    if(temp -> tid != tid){
-        return NULL;
+//     if(temp -> tid != tid){
+//         return NULL;
+//     }
+//     else{
+//         return tid;
+//     }
+//    }
+// }
+
+thread tid2thread(tid_t tid){
+    thread t = a_tid2thread;
+    if(t){
+        return t;
     }
-    else{
-        return tid;
-    }
-   }
+    return NO_THREAD;
 }
 
 void freet(thread t){
@@ -112,8 +107,8 @@ tid_t lwp_wait(int *status){
         //IS THIS DIFFERENT WHEN NO HEAD?
         w_append(current_lwp);
         wait_count++;
-        while(exit_count == 0){
-        // while(STAILQ_FIRST(exitq) != current_lwp || exit_count == 0){
+        // while(exit_count == 0){
+        while(w_first() != current_lwp || exit_count == 0){
             /* if nothing has exited or it is not our turn
                 we need to keep yielding */
             lwp_yield();
@@ -127,11 +122,11 @@ tid_t lwp_wait(int *status){
         current_lwp->sched_two->lib_one=current_lwp->lib_one;
     }
     // tid_t id = STAILQ_FIRST(exitq->tid);
-    // freet(STAILQ_FIRST(exitq));
-    // exit_count--;
-    // STAILQ_REMOVE_HEAD(exitq);
-    // return id;
-    return 0;
+    thread exited_head=e_pop();
+    tid_t id = exited_head->tid;
+    freet(exited_head);
+    exit_count--;
+    return id;
 }
 
 
@@ -142,25 +137,25 @@ void lwp_exit(int exitval){
     */
     current_lwp->status |= (exitval & EXIT_MASK);
     rr->remove(current_lwp);
-    // STAILQ_INSERT_TAIL(exitq, current_lwp);
-    // exit_count++;
+    e_append(current_lwp);
+    exit_count++;
     lwp_yield();
 }
 
 
-void lib_two_end(thread new_thread){
-    /*adds thread to end of the lib_one chain*/
-    if(current_lwp == NULL){
-        current_lwp = new_thread;
-    }
-    else{
-        thread temp = current_lwp;
-        while(temp -> lib_one != NULL){
-            temp = temp -> lib_one;
-        }
-        temp -> lib_one = new_thread;
-    }
-}
+// void lib_two_end(thread new_thread){
+//     /*adds thread to end of the lib_one chain*/
+//     if(current_lwp == NULL){
+//         current_lwp = new_thread;
+//     }
+//     else{
+//         thread temp = current_lwp;
+//         while(temp -> lib_one != NULL){
+//             temp = temp -> lib_one;
+//         }
+//         temp -> lib_one = new_thread;
+//     }
+// }
 
 tid_t lwp_create(lwpfun function,void * argument){
     /*Creates a new lightweight process which executes the given function
@@ -213,8 +208,8 @@ tid_t lwp_create(lwpfun function,void * argument){
     rr -> admit(new_thread);
 
 
-    lib_two_end(new_thread);
-
+    // lib_two_end(new_thread);
+    a_append(new_thread);
 
     return new_thread-> tid;
 }
@@ -230,7 +225,7 @@ has one
 
 thread_context = malloc(sizeof(rfile)); /*allocating context*/
 current_lwp = rr -> next(); /*creates a thread to be scheduled*/
-
+a_append(current_lwp);
 swap_rfiles(thread_context, &(current_lwp -> state)); /*admit thread_context to scheduler, as thread to be scheduled*/
 }
 
