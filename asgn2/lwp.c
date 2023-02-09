@@ -195,7 +195,9 @@ tid_t lwp_create(lwpfun function,void * argument){
         return NO_THREAD;
     }
     new_thread->stacksize = howbig;
-    new_thread->stack=(s + (howbig/sizeof(unsigned long)));
+    // new_thread->stack=(s + (howbig/sizeof(unsigned long) - sizeof(unsigned long)));
+    new_thread->stack = s;
+    s=(new_thread->stack+ howbig/sizeof(unsigned long));
     if((unsigned long)s % 16 != 0){
         printf("stack is not alligned on 16 byte boundary\n");
     }
@@ -206,36 +208,39 @@ tid_t lwp_create(lwpfun function,void * argument){
         function called swap_rfiles() itself 
     */
     *(s-1) = (unsigned long)function; /* put function address on stack to mimic return address */
-    *(s-2) = (unsigned long)s;          /* put rbp on stack */
-    new_thread->state.rsp = (unsigned long)(s - 2);     /* top of stack address */
-    new_thread->state.rdi = (unsigned long)argument;/* argument */
-
+    *(s-2) = 0;          /* put rbp on stack */
+    // s[-1] =(unsigned long)function;
+    // s[-2] = (unsigned long)s;
     new_thread->state.fxsave=FPU_INIT; /*floating point state */
-    rr -> admit(new_thread);
-
-
-    // lib_two_end(new_thread);
+    new_thread->state.rbp = (unsigned long)(s - 2);     /* top of stack address */
+    // new_thread->state.rsp = (unsigned long)(&s[-2]);     /* top of stack address */
+    new_thread->state.rdi = (unsigned long)argument;/* argument */
     a_append(new_thread);
-
+    current_lwp = new_thread;
+    rr -> admit(new_thread);
     return new_thread-> tid;
 }
 
 
 void lwp_start(void){
-/*
-Starts the threading system by converting the calling thread—the original system thread—into a
-LWP by allocating a context for it and admitting it to the scheduler, and yields control to whichever
-thread the scheduler indicates. It is not necessary to allocate a stack for this thread since it already
-has one
-*/
+    /*
+    Starts the threading system by converting the calling thread—the original system thread—into a
+    LWP by allocating a context for it and admitting it to the scheduler, and yields control to whichever
+    thread the scheduler indicates. It is not necessary to allocate a stack for this thread since it already
+    has one
+    */
 
-// thread_context = malloc(sizeof(rfile)); /*allocating context*/
-thread_context = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
+    //thread_context = malloc(sizeof(rfile)); /*allocating context*/
+    thread new_thread = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
 
-current_lwp = rr -> next(); /*creates a thread to be scheduled*/
-swap_rfiles(thread_context, &(current_lwp -> state)); /*admit thread_context to scheduler, as thread to be scheduled*/
-a_append(current_lwp);
-lwp_yield();
+    //thread_context = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
+    //current_lwp = rr -> next(); /*creates a thread to be scheduled*/
+    printf("lwp_start before swap files\n");
+    swap_rfiles(&(new_thread->state), NULL); /*admit thread_context to scheduler, as thread to be scheduled*/
+    printf("lwp start after swap files and before yield\n");
+    rr->admit(new_thread);
+    lwp_yield();
+    printf("lwp start after yield\n");
 }
 
 
@@ -248,15 +253,17 @@ void lwp_yield(void){
     */
    thread other_thread = current_lwp;
    current_lwp = rr->next();
+   printf("start of yield\n");
    
-   if (current_lwp == NULL){
-        swap_rfiles(NULL, thread_context);
+   if (other_thread == NULL){
+        swap_rfiles(NULL, &(current_lwp->state));
    }
 
    swap_rfiles(&(other_thread -> state), &(current_lwp -> state));
+   printf("end of yield\n");
 }
 
-tid_t lwp_gettitd(void){
+tid_t lwp_gettid(void){
     /*
     Returns the tid of the calling LWP or NO THREAD if not called by a
     LWP.   
