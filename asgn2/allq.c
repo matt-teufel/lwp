@@ -42,4 +42,20 @@ thread a_tid2thread(tid_t id){
             return t;
         }
     }
+    return NULL;
+}
+
+//update linked list to remove a thread that has been reaped 
+void a_remove_thread(thread remove){
+    if(STAILQ_FIRST(&aq) == remove){
+        STAILQ_REMOVE_HEAD(&aq);
+    }else{
+        STAILQ_FOREACH(thread, t, &aq){
+            if(t->lib_two == remove){
+                t->lib_two = t->lib_two->lib_two; /* next becomes next next 
+                                                    node in the middle will be deleted */
+            }
+        }
+    }
+
 }

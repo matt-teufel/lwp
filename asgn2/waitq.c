@@ -31,3 +31,7 @@ thread w_pop(void){
     }
     return first;
 }
+
+thread w_first(void){
+    return STAILQ_FIRST(&wq);
+}

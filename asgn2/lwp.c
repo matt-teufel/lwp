@@ -84,7 +84,7 @@ global linked list that holds the waiting threads
 // }
 
 thread tid2thread(tid_t tid){
-    thread t = a_tid2thread;
+    thread t = a_tid2thread(tid);
     if(t){
         return t;
     }
@@ -124,11 +124,17 @@ tid_t lwp_wait(int *status){
     // tid_t id = STAILQ_FIRST(exitq->tid);
     thread exited_head=e_pop();
     tid_t id = exited_head->tid;
+    a_remove_thread(exited_head);
     freet(exited_head);
     exit_count--;
     return id;
 }
 
+/* TODO 
+
+use the termstat macro 
+
+*/
 
 void lwp_exit(int exitval){
     /*
@@ -165,11 +171,11 @@ tid_t lwp_create(lwpfun function,void * argument){
 
     thread new_thread;
     unsigned long *s;
-    long r, page_size;
+    long page_size;
     //default stack size 8 MB
     page_size = getpagesize();
     struct rlimit limit_struct;
-    r = getrlimit(RLIMIT_STACK, &limit_struct);
+    getrlimit(RLIMIT_STACK, &limit_struct);
     //setting stack to stack resource limit 
     if(limit_struct.rlim_cur > 0 && limit_struct.rlim_cur != RLIM_INFINITY){
         if(limit_struct.rlim_cur % page_size == 0){
@@ -184,7 +190,7 @@ tid_t lwp_create(lwpfun function,void * argument){
     //create stack 
     s = mmap(NULL,howbig,PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
     new_thread = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-    if(s == MAP_FAILED){
+    if(s == MAP_FAILED || new_thread == MAP_FAILED){
         printf("unable to map region\n");
         return NO_THREAD;
     }
@@ -223,10 +229,13 @@ thread the scheduler indicates. It is not necessary to allocate a stack for this
 has one
 */
 
-thread_context = malloc(sizeof(rfile)); /*allocating context*/
+// thread_context = malloc(sizeof(rfile)); /*allocating context*/
+thread_context = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
+
 current_lwp = rr -> next(); /*creates a thread to be scheduled*/
-a_append(current_lwp);
 swap_rfiles(thread_context, &(current_lwp -> state)); /*admit thread_context to scheduler, as thread to be scheduled*/
+a_append(current_lwp);
+lwp_yield();
 }
 
 

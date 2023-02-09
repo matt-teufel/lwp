@@ -78,8 +78,11 @@ snakes: randomsnakes.o util.o ../lib64/libPLN.so ../lib64/libsnakes.so
 hungry: hungrysnakes.o  util.o ../lib64/libPLN.so ../lib64/libsnakes.so
 	$(LD) $(LDFLAGS) -o hungry hungrysnakes.o util.o $(SNAKELIBS)
 
-nums: numbersmain.o  util.o ../lib64/libPLN.so 
-	$(LD) $(LDFLAGS) -o nums numbersmain.o -lPLN
+nums: numbersmain.o  util.o liblwp.so
+	$(LD) $(LDFLAGS) -o nums numbersmain.o	-L.	-llwp
+
+lwp_t:	lwp_t.o	liblwp.so
+	$(LD)	$(LDFLAGS)	-o	lwp_t	lwp_t.o	-L. -llwp
 
 hungrysnakes.o: hungrysnakes.c ../include/lwp.h ../include/snakes.h
 	$(CC) $(CFLAGS) -c hungrysnakes.c
@@ -90,8 +93,12 @@ randomsnakes.o: randomsnakes.c ../include/lwp.h ../include/snakes.h
 numbermain.o: numbersmain.c lwp.h
 	$(CC) $(CFLAGS) -c numbersmain.c
 
+lwp_t.o:	lwp_t.c	lwp.h
+	$(CC)	$(CFLAGS)	-c	lwp_t.c
+
 util.o: util.c ../include/lwp.h ../include/util.h ../include/snakes.h
 	$(CC) $(CFLAGS) -c util.c
+
 
 
 .PHONY: rs hs ns
@@ -102,7 +109,7 @@ hs: hungry
 	(export LD_LIBRARY_PATH=../lib64; ./hungry)
 
 ns: nums
-	(export LD_LIBRARY_PATH=../lib64; ./nums)
+	(export LD_LIBRARY_PATH=. ./nums)
 
 
 clean :

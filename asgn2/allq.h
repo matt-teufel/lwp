@@ -5,3 +5,4 @@ void a_append(thread t);
 thread a_pop(void);
 thread a_first(void);
 thread a_tid2thread(tid_t id);
+void a_remove_thread(thread remove);
