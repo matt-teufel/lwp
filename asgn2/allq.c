@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "lwp.h"
-#define STAILQ_NEXT(t)          ((t)->sched_two)
+#define STAILQ_NEXT(t)          ((t)->lib_two)
 #include "stailq.h"
 
 static STAILQ_HEAD(all) aq = STAILQ_INITIALIZER(aq);
