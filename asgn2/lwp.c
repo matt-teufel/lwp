@@ -28,10 +28,7 @@ void swap_rfiles(rfile *old, rfile *new);
 
 thread tid2thread(tid_t tid){
     thread t = a_tid2thread(tid);
-    if(t){
-        return t;
-    }
-    return NO_THREAD;
+    return t;
 }
 
 void freet(thread t){
