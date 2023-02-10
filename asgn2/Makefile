@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -g -std=gnu99 -I../include
 
 LD 	= gcc
-LDFLAGS  = -Wall -g -L../asgn2 -L../lib64
+LDFLAGS  = -Wall -g -L../liblwp64 
 
 
 SNAKEOBJS  = randomsnakes.o util.o
@@ -12,7 +12,7 @@ OBJS	= $(SNAKEOBJS) $(HUNGRYOBJS) $(NUMOBJS)
 
 SNAKELIBS = -llwp -lsnakes -lncurses -lrt
 
-PROGS = lwp snakes nums hungry
+PROGS = lwp mv snakes nums hungry
 
 all: $(PROGS)
 
@@ -73,13 +73,13 @@ lwp_run: lwps
 		LD_LIBRARY_PATH=. ./lwps  
 
 
-snakes: randomsnakes.o util.o ../asgn2/liblwp.so ../lib64/libsnakes.so
+snakes: randomsnakes.o util.o ../liblwp64/liblwp.so ../lib64/libsnakes.so
 	$(LD) $(LDFLAGS) -o snakes randomsnakes.o util.o $(SNAKELIBS)
 
-hungry: hungrysnakes.o  util.o ../asgn2/liblwp.so ../lib64/libsnakes.so
+hungry: hungrysnakes.o  util.o ../liblwp64/liblwp.so ../lib64/libsnakes.so
 	$(LD) $(LDFLAGS) -o hungry hungrysnakes.o util.o $(SNAKELIBS)
 
-nums: numbersmain.o  util.o ../asgn2/liblwp.so 
+nums: numbersmain.o  util.o ../liblwp64/liblwp.so 
 	$(LD) $(LDFLAGS) -o nums numbersmain.o -llwp
 
 hungrysnakes.o: hungrysnakes.c ../include/lwp.h ../include/snakes.h
@@ -95,13 +95,16 @@ util.o: util.c ../include/lwp.h ../include/util.h ../include/snakes.h
 	$(CC) $(CFLAGS) -c util.c 
 
 rs: snakes
-	(export LD_LIBRARY_PATH=../asgn2; ./snakes)
+	(export LD_LIBRARY_PATH=../liblwp64; ./snakes)
 
 hs: hungry
-	(export LD_LIBRARY_PATH=../asgn2; ./hungry)
+	(export LD_LIBRARY_PATH=../liblwp64; ./hungry)
 
 ns: nums
-	(export LD_LIBRARY_PATH=../asgn2; ./nums)
+	(export LD_LIBRARY_PATH=../liblwp64; ./nums)
+
+mv: lwp
+	(mv liblwp.so ../liblwp64)
 
 clean :
-	rm -f *.o *.a *.so core.* 
+	rm -f lib64 *.o *.a *.so core.* 

@@ -53,7 +53,7 @@ void a_remove_thread(thread remove){
         STAILQ_FOREACH(thread, t, &aq){
             if(t->lib_two == remove){
                 t->lib_two = t->lib_two->lib_two; /* next becomes next next 
-                                                    node in the middle will be deleted */
+                        node in the middle will be deleted */
             }
         }
     }
