@@ -16,7 +16,7 @@ struct scheduler rr_publish = {NULL, NULL, rr_admit, rr_remove, rr_next};
 scheduler rr = &rr_publish;
 thread current_lwp = NULL; 
 rfile *thread_context;
-int id_count = 1;
+int id_count = 2;
 int wait_count = 0;
 int exit_count = 0;
 int howbig = 8000000;
@@ -92,7 +92,9 @@ thread tid2thread(tid_t tid){
 }
 
 void freet(thread t){
-    free(t->stack-(howbig/sizeof(unsigned long)));
+    if(t->stack){
+        free(t->stack);
+    }
     free(t);
 }
 
@@ -101,6 +103,7 @@ tid_t lwp_wait(int *status){
     Waits for a thread to terminate, deallocates its resources, and reports its termination status if status is non-NULL.
     Returns the tid of the terminated thread or NO THREAD
     */
+    printf("start of wait\n");
     if(exit_count== 0 || wait_count!=0){
         /* if nothing has exited or other stuff is waiting
             we need to go on the wait q */
@@ -113,20 +116,23 @@ tid_t lwp_wait(int *status){
                 we need to keep yielding */
             lwp_yield();
         }
+        printf("after wait spin\n");
         wait_count--;
         w_pop();
     }
     //free thread and update links, exitq, and exit count
-    if(current_lwp->sched_two){
-        /* updating prev thread to point at next thread for tid ll */
-        current_lwp->sched_two->lib_one=current_lwp->lib_one;
-    }
+    // if(current_lwp->sched_two){
+    //     /* updating prev thread to point at next thread for tid ll */
+    //     current_lwp->sched_two->lib_one=current_lwp->lib_one;
+    // }
     // tid_t id = STAILQ_FIRST(exitq->tid);
+
     thread exited_head=e_pop();
     tid_t id = exited_head->tid;
     a_remove_thread(exited_head);
     freet(exited_head);
     exit_count--;
+    printf("end of wait\n");
     return id;
 }
 
@@ -141,11 +147,13 @@ void lwp_exit(int exitval){
     Terminates the current LWP and yields to whichever thread the
     scheduler chooses. lwp exit() does not return    
     */
+    printf("lwp exit start\n");
     current_lwp->status |= (exitval & EXIT_MASK);
     rr->remove(current_lwp);
     e_append(current_lwp);
     exit_count++;
     lwp_yield();
+    printf("lwp exit end\n");
 }
 
 
@@ -232,7 +240,7 @@ void lwp_start(void){
 
     //thread_context = malloc(sizeof(rfile)); /*allocating context*/
     thread new_thread = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
-
+    new_thread->tid=1;
     //thread_context = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
     //current_lwp = rr -> next(); /*creates a thread to be scheduled*/
     printf("lwp_start before swap files\n");
@@ -254,12 +262,12 @@ void lwp_yield(void){
    thread other_thread = current_lwp;
    current_lwp = rr->next();
    printf("start of yield\n");
-   
    if (other_thread == NULL){
         swap_rfiles(NULL, &(current_lwp->state));
+   }else{
+       printf("other thread: %i, current_lwp: %i\n", (int)other_thread->tid, (int)current_lwp->tid);
+        swap_rfiles(&(other_thread -> state), &(current_lwp -> state));
    }
-
-   swap_rfiles(&(other_thread -> state), &(current_lwp -> state));
    printf("end of yield\n");
 }
 
