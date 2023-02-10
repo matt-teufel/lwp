@@ -3,9 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-thread pool = NULL;
-thread ref = NULL; /*used for tracking the end node*/
-struct scheduler rr_publish = {NULL, NULL, rr_admit, rr_remove, rr_next};
+thread head = NULL;
+thread tail = NULL; /*used for tracking the end node*/
+// struct scheduler rr_publish = {NULL, NULL, rr_admit, rr_remove, rr_next};
 
 /*
 sched_one: thread to be runned
@@ -20,6 +20,7 @@ testing with main and thread structures
 void rr_admit(thread new);
 void rr_remove(thread victim);
 thread rr_next();
+int count=0;
 // int main()
 // {
 //     thread state = (thread) malloc(sizeof(context));
@@ -30,9 +31,9 @@ thread rr_next();
 //     //printf("state tid value %i\n", state -> tid);
 
 //     rr_admit(state);
-//     printf("pool tid value %i\n", pool -> tid);
-//     printf("pool sched_one tid value %i\n", pool -> sched_one -> tid);
-//     //printf("pool sched_two tid value %i\n", pool ->sched_two  -> tid);
+//     printf("head tid value %i\n", head -> tid);
+//     printf("head sched_one tid value %i\n", head -> sched_one -> tid);
+//     //printf("head sched_two tid value %i\n", head ->sched_two  -> tid);
 
 //     thread states = (thread) malloc(sizeof(context));
 //     //thread state = NULL;
@@ -41,97 +42,68 @@ thread rr_next();
 //     states -> stacksize = 7;
 
 //     rr_admit(states);
-//     printf("pool tid value %i\n", pool -> tid);
-//     printf("pool sched_one tid value %i\n", pool -> sched_one -> tid);
-//     printf("pool sched_two tid value %i\n", pool ->sched_two  -> tid);
+//     printf("head tid value %i\n", head -> tid);
+//     printf("head sched_one tid value %i\n", head -> sched_one -> tid);
+//     printf("head sched_two tid value %i\n", head ->sched_two  -> tid);
 
 
 //     return 0;
 // }
 
 void rr_admit(thread new){
-    /*admits a thread and adds to the ref of the pool*/
-    if (pool == NULL){
-        /*pool has no threads*/
-        pool = new;
-        new -> sched_two = NULL;
-        new -> sched_one = pool;
+    count++;
+    /*admits a thread and adds to the tail of the head*/
+    if (head == NULL){
+        /*head has no threads*/
+        head = new;
     }
     else{
-        /*pool has threads in list*/
-        thread temp = pool;
-        while(temp != ref){
-            temp = temp -> sched_one;
-        }
-        temp -> sched_one = new;
-        if(temp == pool){
-            temp -> sched_two = new;
-        }
-        new -> sched_two = temp;
-        new -> sched_one = pool;
+        /*head has threads in list*/
+        tail->sched_one = new;
     }
-    ref = new;
+    new->sched_one = head;
+    tail = new;
 }
 
 
 void rr_remove(thread victim){
-
-    if (!pool){
-        thread temp = pool;
-        thread temps = NULL;
-
-        /*first node removed*/
-        if (victim -> tid == pool -> tid){
-            temp = pool;
-            temps = NULL; /*holds thread after the removed one*/
-
-            if(pool != pool -> sched_one){
-                pool = pool -> sched_one;
-            }
-            else{
-                pool = NULL;
-            }
-
-            temp -> sched_one = NULL;
-            temp -> sched_two = NULL;
-            if (pool != NULL){
-                pool -> sched_two = ref;
-                ref -> sched_one = pool;
-            }
-        }
-    
-        /*last node removed*/
-        else if (victim -> tid == ref -> tid){
-            temp = pool;
-            temps = ref;
-            while(temp != ref){
-                temp = temp -> sched_one;
-            }
-            ref = temp;
-            ref -> sched_one = pool;
-            ref -> sched_two = NULL;
-        }
-
-        /*middle node removed*/
-        else{
-            temp = pool;
-            temps = NULL; /*stores removed node*/
-            while(temp != ref){
-                temp = temp -> sched_one;
-            }
-            temps = temp -> sched_one;
-            temp -> sched_one = temps -> sched_one; /*reconnects the pool*/
-            temps -> sched_one = NULL;
-            temps -> sched_two = NULL;
-        }
+    count--;
+    thread temp;
+    if (head == NULL){
+        return;
     }
+    /*first node removed*/
+    if (victim->tid == head->tid){
+        if(victim->sched_one != head){
+            head = victim->sched_one;
+            tail->sched_one = head;
+        }else{
+            head = NULL;
+            tail = NULL;
+            }
+        return;
+        }
+    /*last node removed*/
+    temp = head;
+    while(temp->sched_one->tid != victim->tid){
+        temp = temp->sched_one;
+    }
+    if(temp->sched_one->tid == tail->tid){
+        tail = temp->sched_one->sched_one;
+    }
+    temp->sched_one = temp->sched_one->sched_one;
 }
+
+
 
 thread rr_next(){
     /*selects next thread to be scheduled
     may need to look into*/
-    if(pool){
-        pool = pool -> sched_one;
+    if(head){
+        tail=head;
+        head = head -> sched_one;
     }
-    return pool;
+
+    return head;
 }
+
