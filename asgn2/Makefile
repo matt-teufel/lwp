@@ -1,19 +1,20 @@
 CC = gcc
-CFLAGS = -Wall -g -std=gnu99
+CFLAGS = -Wall -g -std=gnu99 -I../include
 
 LD 	= gcc
-LDFLAGS  = -Wall -g -L../lib64
+LDFLAGS  = -Wall -g -L../asgn2 -L../lib64
+
 
 SNAKEOBJS  = randomsnakes.o util.o
 HUNGRYOBJS = hungrysnakes.o util.o
 NUMOBJS    = numbersmain.o
 OBJS	= $(SNAKEOBJS) $(HUNGRYOBJS) $(NUMOBJS) 
 
-SNAKELIBS = -lPLN -lsnakes -lncurses -lrt
+SNAKELIBS = -llwp -lsnakes -lncurses -lrt
 
 PROGS = lwp snakes nums hungry
 
-all: lwp
+all: $(PROGS)
 
 magic64: magic64.S magic64.o
 magic64.o: magic64.S
@@ -24,24 +25,24 @@ lwp: liblwp.so
 .PHONY: lwp #need this line to ignore main()/ executable
 
 #builds one library with scheduler.o, under lwp.so
-liblwp.so: lwp.o rr_scheduler.o magic64.o	waitq.o exitq.o allq.o
+liblwp.so: lwp.o rr_scheduler.o magic64.o waitq.o exitq.o allq.o
 	$(CC) $(CFLAGS) -fPIC -I./include -shared -o $@ lwp.o rr_scheduler.o magic64.o	waitq.o exitq.o allq.o
 
 lwp.o: lwp.c lwp.h rr_scheduler.h magic64.o waitq.o exitq.o allq.o
-	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o -c lwp.c magic64.o waitq.o exitq.o allq.o
+	$(CC) $(CFLAGS) -fPIC -I./include -o lwp.o magic64.o waitq.o exitq.o allq.o -c lwp.c
 
 
 #rr_scheduler setup
-rr_scheduler: rr_scheduler.a rr_scheduler.so
+rr_scheduler: rr_scheduler.o
 .PHONY: rr_scheduler #need this line to ignore main()/ executable
 
 rr_scheduler.o: rr_scheduler.c lwp.h rr_scheduler.h
 	$(CC) $(CFLAGS) -fPIC -I./include -o rr_scheduler.o -c rr_scheduler.c
 
 #queue setups converted into a library
-waitq:	waitq.a	waitq.so
-exitq: exitq.a exitq.so
-allq: allq.a allq.so
+waitq:  waitq.so
+exitq:  exitq.so
+allq:   allq.so
 .PHONY:	waitq exitq allq
 
 waitq.so: waitq.o 
@@ -71,46 +72,36 @@ lwp_se.o: lwp_se.c lwp.h rr_scheduler.h
 lwp_run: lwps
 		LD_LIBRARY_PATH=. ./lwps  
 
-#given_test_files change '../lib64/libPLN.so' to '.' for referencing library created in current directory
-snakes: randomsnakes.o util.o ../lib64/libPLN.so ../lib64/libsnakes.so
+
+snakes: randomsnakes.o util.o ../asgn2/liblwp.so ../lib64/libsnakes.so
 	$(LD) $(LDFLAGS) -o snakes randomsnakes.o util.o $(SNAKELIBS)
 
-hungry: hungrysnakes.o  util.o ../lib64/libPLN.so ../lib64/libsnakes.so
+hungry: hungrysnakes.o  util.o ../asgn2/liblwp.so ../lib64/libsnakes.so
 	$(LD) $(LDFLAGS) -o hungry hungrysnakes.o util.o $(SNAKELIBS)
 
-nums: numbersmain.o  util.o liblwp.so
-	$(LD) $(LDFLAGS) -o nums numbersmain.o	-L.	-llwp
-
-lwp_t:	lwp_t.o	liblwp.so
-	$(LD)	$(LDFLAGS)	-o	lwp_t	lwp_t.o	-L. -llwp
+nums: numbersmain.o  util.o ../asgn2/liblwp.so 
+	$(LD) $(LDFLAGS) -o nums numbersmain.o -llwp
 
 hungrysnakes.o: hungrysnakes.c ../include/lwp.h ../include/snakes.h
-	$(CC) $(CFLAGS) -c hungrysnakes.c
+	$(CC) $(CFLAGS) -c hungrysnakes.c 
 
 randomsnakes.o: randomsnakes.c ../include/lwp.h ../include/snakes.h
-	$(CC) $(CFLAGS) -c randomsnakes.c
+	$(CC) $(CFLAGS) -c randomsnakes.c 
 
 numbermain.o: numbersmain.c lwp.h
 	$(CC) $(CFLAGS) -c numbersmain.c
 
-lwp_t.o:	lwp_t.c	lwp.h
-	$(CC)	$(CFLAGS)	-c	lwp_t.c
-
 util.o: util.c ../include/lwp.h ../include/util.h ../include/snakes.h
-	$(CC) $(CFLAGS) -c util.c
+	$(CC) $(CFLAGS) -c util.c 
 
-
-
-.PHONY: rs hs ns
 rs: snakes
-	(export LD_LIBRARY_PATH=../lib64; ./snakes)
+	(export LD_LIBRARY_PATH=../asgn2; ./snakes)
 
 hs: hungry
-	(export LD_LIBRARY_PATH=../lib64; ./hungry)
+	(export LD_LIBRARY_PATH=../asgn2; ./hungry)
 
 ns: nums
-	(export LD_LIBRARY_PATH=. ./nums)
-
+	(export LD_LIBRARY_PATH=../asgn2; ./nums)
 
 clean :
 	rm -f *.o *.a *.so core.* 
