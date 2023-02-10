@@ -26,63 +26,6 @@ void rr_remove(thread victim);
 thread rr_next();
 void swap_rfiles(rfile *old, rfile *new);
 
-// void print_stack(thread t){
-//     int i = 1;
-//     while(t->stack[-i] != NULL){
-//         printf("stack index: %i, value: %lu\n",i, t->stack[-i]);
-//         i++;
-//     }
-// }
-
-void print_registers(thread t){
-  printf("rax: %lu\n", t->state.rax);
-  printf("rbx: %lu\n", t->state.rbx);
-  printf("rcx: %lu\n", t->state.rcx);
-  printf("rdx: %lu\n", t->state.rdx);
-  printf("rsi: %lu\n", t->state.rsi);
-  printf("rdi: %lu\n", t->state.rdi);
-  printf("rbp: %lu\n", t->state.rbp);
-  printf("rsp: %lu\n", t->state.rsp);
-  printf("r8: %lu\n", t->state.r8);
-  printf("r9: %lu\n", t->state.r9);
-  printf("r10: %lu\n", t->state.r10);
-  printf("r11: %lu\n", t->state.r11);
-  printf("r12: %lu\n", t->state.r12);
-  printf("r13: %lu\n", t->state.r13);
-  printf("r14: %lu\n", t->state.r14);
-  printf("r15: %lu\n", t->state.r15);
-  //printf("fxsave: %lu\n", t->state.fxsave);
-}
-
-
-/*TO DO*/
-/*
-global linked list that holds the exited threads
-global linked list that holds the waiting threads
-*/
-// thread tid2thread(tid_t tid){
-//     /*
-//     returns the thread corresponding to the given thread ID, or NULL if
-//     ID is invalid
-//     */
-//    if(current_lwp == NULL){
-//         return NULL;
-//    }
-//    else{
-//     thread temp = current_lwp;
-//     while(temp -> tid != tid){
-//         temp -> lib_one;
-//     }
-
-//     if(temp -> tid != tid){
-//         return NULL;
-//     }
-//     else{
-//         return tid;
-//     }
-//    }
-// }
-
 thread tid2thread(tid_t tid){
     thread t = a_tid2thread(tid);
     if(t){
@@ -103,30 +46,34 @@ tid_t lwp_wait(int *status){
     Waits for a thread to terminate, deallocates its resources, and reports its termination status if status is non-NULL.
     Returns the tid of the terminated thread or NO THREAD
     */
-    printf("start of wait\n");
+   // printf("start of wait\n");
     /* if not enough stuff has exited then we must 
     sleep and go on wait q */
     if(exit_count <= wait_count){
-        rr->remove(current_lwp);
-        if(rr_qlen()==0){
-            //prob free some stuff here
-
-
-            printf("happy exit\n");
-            exit(current_lwp->status);
-        }
-        w_append(current_lwp);
         wait_count++;
+       // printf("wait -- exit count was lest than wait count ec: %i wc %i \n", exit_count, wait_count);
+        rr->remove(current_lwp);
+        // if(rr_qlen()==0){
+        //     //prob free some stuff here
+
+
+        //     printf("happy exit\n");
+        //     exit(current_lwp->status);
+        // }
+        w_append(current_lwp);
         lwp_yield();
-        printf("tid of sleepr: %i\n", (int)current_lwp->tid);
+ //       printf("tid of sleepr: %i\n", (int)current_lwp->tid);
     }else if(wait_count){
+       // printf("wait -- enough stuff has exitted for us but not our turn ec: %i wc %i \n", exit_count, wait_count);
+
         /* if enough stuff has exited but its not our turn
         we must wait, but we can stay on scheduler  */
         lwp_yield();
     }
     //reaping time
-    printf("awake in wait\n");
-    printf("tid of sleepr: %i\n", (int)current_lwp->tid);
+ //   printf("awake in wait\n");
+ //   printf("tid of sleepr: %i\n", (int)current_lwp->tid);
+    //printf("reap time  for %i\n",(int)current_lwp->tid);
     thread exited_head=e_pop();
     tid_t id = exited_head->tid;
     a_remove_thread(exited_head);
@@ -134,7 +81,7 @@ tid_t lwp_wait(int *status){
         freet(exited_head); /* don't free main thread */
     }
     exit_count--;
-    printf("end of wait\n");
+  //  printf("end of wait\n");
     return id;
 }
 
@@ -149,34 +96,21 @@ void lwp_exit(int exitval){
     Terminates the current LWP and yields to whichever thread the
     scheduler chooses. lwp exit() does not return    
     */
-    printf("lwp exit start\n");
+ //   printf("lwp exit start\n");
     current_lwp->status |= (exitval & EXIT_MASK);
     rr->remove(current_lwp);
     e_append(current_lwp);
     exit_count++;
     if(w_first()){
         /* if someone is sleeping, wake them up */
-        printf("waking someone up \n");
+   //     printf("waking someone up \n");
+      //  printf("exit -- waking someone up: %i wc %i \n", exit_count, wait_count);
         rr->admit(w_pop());
         wait_count--;
     }
     lwp_yield();
 }
 
-
-// void lib_two_end(thread new_thread){
-//     /*adds thread to end of the lib_one chain*/
-//     if(current_lwp == NULL){
-//         current_lwp = new_thread;
-//     }
-//     else{
-//         thread temp = current_lwp;
-//         while(temp -> lib_one != NULL){
-//             temp = temp -> lib_one;
-//         }
-//         temp -> lib_one = new_thread;
-//     }
-// }
 
 tid_t lwp_create(lwpfun function,void * argument){
     /*Creates a new lightweight process which executes the given function
@@ -212,7 +146,7 @@ tid_t lwp_create(lwpfun function,void * argument){
     new_thread->stacksize = howbig;
     // new_thread->stack=(s + (howbig/sizeof(unsigned long) - sizeof(unsigned long)));
     new_thread->stack = s;
-    printf("tid: %i, stack p: %p, and its addr as long: %lu\n", (int)new_thread->tid,new_thread->stack,(unsigned long)(new_thread->stack));
+  //  printf("tid: %i, stack p: %p, and its addr as long: %lu\n", (int)new_thread->tid,new_thread->stack,(unsigned long)(new_thread->stack));
     s=(new_thread->stack+ howbig/sizeof(unsigned long));
     if((unsigned long)s % 16 != 0){
         printf("stack is not alligned on 16 byte boundary\n");
@@ -251,13 +185,13 @@ void lwp_start(void){
     new_thread->status = LWP_LIVE;
     //thread_context = mmap(NULL, sizeof(context),PROT_READ|PROT_WRITE,MAP_PRIVATE|MAP_ANONYMOUS|MAP_STACK,-1,0);
     //current_lwp = rr -> next(); /*creates a thread to be scheduled*/
-    printf("lwp_start before swap files\n");
+  //  printf("lwp_start before swap files\n");
     swap_rfiles(&(new_thread->state), NULL); /*admit thread_context to scheduler, as thread to be scheduled*/
-    printf("lwp start after swap files and before yield\n");
+  //  printf("lwp start after swap files and before yield\n");
     rr->admit(new_thread);
     current_lwp = new_thread;
     lwp_yield();
-    printf("lwp start after yield\n");
+  //  printf("lwp start after yield\n");
 }
 
 
@@ -270,7 +204,7 @@ void lwp_yield(void){
     */
    thread other_thread = current_lwp;
    current_lwp = rr->next();
-   printf("start of yield\n");
+   //printf("start of yield\n");
    if (other_thread == NULL){
         swap_rfiles(NULL, &(current_lwp->state));
    }else if(current_lwp == NULL){
@@ -279,7 +213,7 @@ void lwp_yield(void){
     }else{
         swap_rfiles(&(other_thread -> state), &(current_lwp -> state));
    }
-   printf("end of yield\n");
+//   printf("end of yield\n");
 }
 
 tid_t lwp_gettid(void){
@@ -352,7 +286,3 @@ void lwp_set_scheduler(scheduler sched){
     }
     rr = sched; /*initializes running thread to new thread*/
 }
-
-// int main(int argc, char *argv[]){
-//     return 0;
-// }
