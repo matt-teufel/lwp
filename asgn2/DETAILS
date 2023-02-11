@@ -43,17 +43,17 @@ Launching LWPS
               3
                    4
                         5
-A thread exited with status 252
+A thread exited with status 255
               3
                    4
                         5
-A thread exited with status 252
+A thread exited with status 255
                    4
                         5
-A thread exited with status 252
+A thread exited with status 255
                         5
-A thread exited with status 252
-A thread exited with status 252
+A thread exited with status 255
+A thread exited with status 255
 Back from LWPS.
 
 ---------------------------------
@@ -63,21 +63,21 @@ Differences (< reference > output)
 11c11
 < A thread exited with status 1
 ---
-> A thread exited with status 252
+> A thread exited with status 255
 15c15
 < A thread exited with status 2
 ---
-> A thread exited with status 252
+> A thread exited with status 255
 18c18
 < A thread exited with status 3
 ---
-> A thread exited with status 252
+> A thread exited with status 255
 20,21c20,21
 < A thread exited with status 4
 < A thread exited with status 5
 ---
-> A thread exited with status 252
-> A thread exited with status 252
+> A thread exited with status 255
+> A thread exited with status 255
 ---------
 =================================================
 TEST 23: Transfer threads to same scheduler (live)
@@ -657,24 +657,12 @@ tid2thread() is returning bogus values
 tid2thread() is returning bogus values
 tid2thread() is returning bogus values
 tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
-tid2thread() is returning bogus values
 Launching LWPS
   1
      2
         3
            4
+tid2thread() is returning bogus values
               5
                  6
                     7
@@ -682,12 +670,14 @@ Launching LWPS
                           9
                             10
                                11
+tid2thread() is returning bogus values
                                   12
                                      13
                                         14
                                            15
                                               16
                                                  17
+tid2thread() is returning bogus values
                                                     18
                                                        19
                                                           20
@@ -695,6 +685,7 @@ Launching LWPS
            4
               5
                  6
+tid2thread() is returning bogus values
                     7
                        8
                           9
@@ -702,11 +693,13 @@ Launching LWPS
                                11
                                   12
                                      13
+tid2thread() is returning bogus values
                                         14
                                            15
                                               16
                                                  17
                                                     18
+tid2thread() is returning bogus values
                                                        19
                                                           20
      2
@@ -715,18 +708,22 @@ Launching LWPS
               5
                  6
                     7
+tid2thread() is returning bogus values
                        8
                           9
                             10
                                11
                                   12
+tid2thread() is returning bogus values
                                      13
                                         14
                                            15
                                               16
                                                  17
+tid2thread() is returning bogus values
                                                     18
                                                        19
+tid2thread() is returning bogus values
                                                           20
            4
               5
@@ -734,14 +731,17 @@ Launching LWPS
                     7
                        8
                           9
+tid2thread() is returning bogus values
                             10
                                11
                                   12
                                      13
+tid2thread() is returning bogus values
                                         14
                                            15
                                               16
                                                  17
+tid2thread() is returning bogus values
                                                     18
                                                        19
                                                           20
@@ -887,7 +887,7 @@ Back from LWPS.
 Differences (< reference > output)
 ---------------------------------
 
-0a1,21
+0a1,8
 > tid2thread() is returning bogus values
 > tid2thread() is returning bogus values
 > tid2thread() is returning bogus values
@@ -896,17 +896,30 @@ Differences (< reference > output)
 > tid2thread() is returning bogus values
 > tid2thread() is returning bogus values
 > tid2thread() is returning bogus values
+5a14
 > tid2thread() is returning bogus values
+12a22
 > tid2thread() is returning bogus values
+18a29
 > tid2thread() is returning bogus values
+25a37
 > tid2thread() is returning bogus values
+32a45
 > tid2thread() is returning bogus values
+37a51
 > tid2thread() is returning bogus values
+45a60
 > tid2thread() is returning bogus values
+50a66
 > tid2thread() is returning bogus values
+55a72
 > tid2thread() is returning bogus values
+57a75
 > tid2thread() is returning bogus values
+64a83
 > tid2thread() is returning bogus values
+68a88
 > tid2thread() is returning bogus values
+72a93
 > tid2thread() is returning bogus values
 ---------

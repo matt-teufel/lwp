@@ -17,7 +17,7 @@ struct scheduler rr_publish =
 scheduler rr = &rr_publish;
 thread current_lwp = NULL; 
 rfile *thread_context;
-int id_count = 2;
+int id_count = 0;
 int wait_count = 0;
 int exit_count = 0;
 int howbig = 8000000;
@@ -158,7 +158,7 @@ tid_t lwp_create(lwpfun function,void * argument){
     if((unsigned long)s  % 16 != 0){
         printf("stack is not aligned on 16 byte boundary\n");
     }
-    new_thread->tid = id_count++;
+    new_thread->tid = ++id_count;
 
     /*  
         initialize stack and registers as if 
@@ -283,12 +283,12 @@ void lwp_set_scheduler(scheduler sched){
         sched->init();
     }
 
-    if (id_count == 2  && sched != NULL){
+    if (id_count == 0  && sched != NULL){
         rr = sched;
         return;
     }
 
-    i = 2;
+    i = 0;
     thread temp = rr -> next();
     while(i < id_count)
     {
