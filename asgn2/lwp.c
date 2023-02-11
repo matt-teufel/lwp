@@ -165,7 +165,7 @@ tid_t lwp_create(lwpfun function,void * argument){
         function called swap_rfiles() itself 
     */
     /* put function address on stack to mimic return address */
-    *(s-1) = lwp_exit;
+    *(s-1) = (unsigned long)lwp_exit;
     *(s-2) = (unsigned long)function;
     // *(s-1) = (unsigned long)function; 
     // *(s-2) = 0;          /* put rbp on stack */
@@ -283,12 +283,12 @@ void lwp_set_scheduler(scheduler sched){
         sched->init();
     }
 
-    if (id_count == 1  && sched != NULL){
+    if (id_count == 2  && sched != NULL){
         rr = sched;
         return;
     }
 
-    i = 1;
+    i = 2;
     thread temp = rr -> next();
     while(i < id_count)
     {
