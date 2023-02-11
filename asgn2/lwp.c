@@ -12,7 +12,8 @@
 #include "rr_scheduler.h"
 #define EXIT_MASK 0xFF
 
-struct scheduler rr_publish = {NULL, NULL, rr_admit, rr_remove, rr_next};
+struct scheduler rr_publish = 
+{NULL, NULL, rr_admit, rr_remove, rr_next, rr_qlen};
 scheduler rr = &rr_publish;
 thread current_lwp = NULL; 
 rfile *thread_context;
@@ -52,13 +53,13 @@ tid_t lwp_wait(int *status){
        // printf("wait -- exit count was lest
        // than wait count ec: %i wc %i \n", exit_count, wait_count);
         rr->remove(current_lwp);
-        // if(rr_qlen()==0){
-        //     //prob free some stuff here
+        if(rr -> qlen == 0){
+            //prob free some stuff here
 
 
-        //     printf("happy exit\n");
-        //     exit(current_lwp->status);
-        // }
+            //printf("happy exit\n");
+            exit(current_lwp->status);
+        }
         w_append(current_lwp);
         lwp_yield();
  //       printf("tid of sleepr: %i\n", (int)current_lwp->tid);
@@ -137,7 +138,6 @@ tid_t lwp_create(lwpfun function,void * argument){
             howbig = limit_struct.rlim_cur + page_size + 
             (limit_struct.rlim_cur % page_size);
         }
-        
     }
     //create stack 
     s = mmap
@@ -149,15 +149,15 @@ tid_t lwp_create(lwpfun function,void * argument){
         return NO_THREAD;
     }
     new_thread->stacksize = howbig;
-    // new_thread->stack=
+    //new_thread->stack=
     //(s + (howbig/sizeof(unsigned long) - sizeof(unsigned long)));
     new_thread->stack = s;
   //  printf("tid: %i, stack p: %p, and its addr as long: %lu\n", 
   //(int)new_thread->tid,new_thread->stack,(unsigned long)(new_thread->stack));
-    s=(new_thread->stack+ howbig/sizeof(unsigned long));
-    // if((unsigned long)s % 16 != 0){
-    //     printf("stack is not alligned on 16 byte boundary\n");
-    // }
+    s=(new_thread->stack + howbig/sizeof(unsigned long));
+    if((unsigned long)s  % 16 != 0){
+        printf("stack is not aligned on 16 byte boundary\n");
+    }
     new_thread->tid = id_count++;
 
     /*  
@@ -165,14 +165,15 @@ tid_t lwp_create(lwpfun function,void * argument){
         function called swap_rfiles() itself 
     */
     /* put function address on stack to mimic return address */
-    *(s-1) = (unsigned long)function; 
-    *(s-2) = 0;          /* put rbp on stack */
+    *(s-1) = lwp_exit;
+    *(s-2) = (unsigned long)function;
+    // *(s-1) = (unsigned long)function; 
+    // *(s-2) = 0;          /* put rbp on stack */
     // s[-1] =(unsigned long)function;
     // s[-2] = (unsigned long)s;
     new_thread->state.fxsave=FPU_INIT; /*floating point state */
-    new_thread->state.rbp = (unsigned long)(s - 2);/* top of stack address */
-    // new_thread->state.rsp = 
-    //(unsigned long)(&s[-2]);     /* top of stack address */
+    new_thread->state.rbp = (unsigned long)(s-3);/* top of stack address */
+    new_thread->state.rsp = (unsigned long)(s-3);/* top of stack address */
     new_thread->state.rdi = (unsigned long)argument;/* argument */
     a_append(new_thread);
     rr -> admit(new_thread);

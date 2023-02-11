@@ -68,3 +68,6 @@ thread rr_next(){
     return temp;
 }
 
+int rr_qlen(){
+    return count;
+}
