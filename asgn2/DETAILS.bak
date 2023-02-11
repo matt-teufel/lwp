@@ -43,17 +43,17 @@ Launching LWPS
               3
                    4
                         5
-A thread exited with status 252
+A thread exited with status 254
               3
                    4
                         5
-A thread exited with status 252
+A thread exited with status 254
                    4
                         5
-A thread exited with status 252
+A thread exited with status 254
                         5
-A thread exited with status 252
-A thread exited with status 252
+A thread exited with status 254
+A thread exited with status 254
 Back from LWPS.
 
 ---------------------------------
@@ -63,21 +63,21 @@ Differences (< reference > output)
 11c11
 < A thread exited with status 1
 ---
-> A thread exited with status 252
+> A thread exited with status 254
 15c15
 < A thread exited with status 2
 ---
-> A thread exited with status 252
+> A thread exited with status 254
 18c18
 < A thread exited with status 3
 ---
-> A thread exited with status 252
+> A thread exited with status 254
 20,21c20,21
 < A thread exited with status 4
 < A thread exited with status 5
 ---
-> A thread exited with status 252
-> A thread exited with status 252
+> A thread exited with status 254
+> A thread exited with status 254
 ---------
 =================================================
 TEST 23: Transfer threads to same scheduler (live)
